@@ -314,8 +314,8 @@ class ResultScreen extends StatelessWidget {
 ## Tugas Praktikum
 
 1. Jalankan Aplikasi
-   ![Hasil run](images/1.jpeg)
-   ![Hasil run](images/2.jpeg)
+   ![Hasil run](images/1.jpg)
+   ![Hasil run](images/2.jpg)
 
 ## 📋 Tugas Praktikum & Jawaban
 
