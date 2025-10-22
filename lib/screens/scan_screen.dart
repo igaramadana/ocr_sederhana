@@ -140,7 +140,7 @@ class _ScanScreenState extends State<ScanScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const CircularProgressIndicator(
-                color: Colors.yellow,
+                color: Colors.deepPurple,
                 strokeWidth: 4,
               ),
               const SizedBox(height: 20),
