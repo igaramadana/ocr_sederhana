@@ -382,3 +382,177 @@ Contoh: **J&T, SiCepat**
 
 📘 **Kesimpulan:**  
 OCR merupakan teknologi penting dalam proses digitalisasi dan automasi berbagai sektor, meningkatkan efisiensi, akurasi, serta aksesibilitas informasi di era modern.
+
+---
+
+## UTS : Modifikasi ocr_sederhana (Diperbarui sesuai kode)
+
+### Soal 1 : Struktur Navigasi dan Aliran
+
+- HomeScreen memulai pemindaian dengan ListTile / tombol yang menavigasi ke ScanScreen:
+
+```dart
+ListTile(
+  leading: const Icon(Icons.camera_alt, color: Colors.white, size: 30),
+  title: const Text('Mulai Scan', style: TextStyle(color: Colors.white)),
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ScanScreen()),
+    );
+  },
+)
+```
+
+- ResultScreen menampilkan teks asli menggunakan SelectableText dan menyediakan FAB Home yang menghapus route sebelumnya:
+
+```dart
+SelectableText(
+  ocrText.isEmpty ? 'Tidak ada teks ditemukan.' : ocrText,
+  style: const TextStyle(fontSize: 18),
+),
+FloatingActionButton(
+  onPressed: () {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
+      (route) => false,
+    );
+  },
+  child: const Icon(Icons.home_rounded),
+),
+```
+
+📷 **Screenshot Hasil:**
+
+<p align="center">
+  <img src="images/uts1.jpg" width="250"/>
+  <img src="images/uts2.jpg" width="250"/>
+  <img src="images/uts3.jpg" width="250"/>
+</p>
+---
+
+### Soal 2 : Tampilan Loading & Penanganan Error
+
+- Loading sebelum kamera siap (sesuai kode di scan_screen.dart):
+
+```dart
+if (!_isCameraInitialized) {
+  return Scaffold(
+    backgroundColor: Colors.grey[900],
+    body: Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(
+            color: Colors.deepPurple,
+            strokeWidth: 4,
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Memuat Kamera... Harap tunggu.',
+            style: TextStyle(color: Colors.white, fontSize: 18),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Mempersiapkan pengalaman scan terbaik...',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.7),
+              fontSize: 14,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    ),
+  );
+}
+```
+
+- Penanganan error pada pengambilan foto / OCR (snippet):
+
+```dart
+try {
+  await _initializeControllerFuture;
+  final XFile image = await _controller.takePicture();
+  final ocrText = await _ocrFromFile(File(image.path));
+  Navigator.push(context, MaterialPageRoute(builder: (_) => ResultScreen(ocrText: ocrText)));
+} catch (e) {
+  if (!mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text('Error saat mengambil/memproses foto: $e')),
+  );
+}
+```
+
+📷 **Screenshot Hasil:**
+
+<p align="center">
+  <img src="images/uts4.jpg" width="250"/>
+  <img src="images/uts5.jpg" width="250"/>
+</p>
+---
+
+### Soal 3: Implementasi Text-to-Speech (TTS)
+
+- Dependency: tambahkan flutter_tts pada pubspec.yaml.
+
+```dart
+dependencies:
+  flutter:
+    sdk: flutter
+  camera: ^0.10.5+5
+  path_provider: ^2.1.2
+  path: ^1.8.3
+  flutter_tts: ^4.2.3
+```
+
+- Inisialisasi dan penggunaan TTS (potongan dari result_screen.dart, menyesuaikan pengecekan bahasa):
+
+```dart
+flutterTts = FlutterTts();
+
+// cek languages (device/emulator mungkin mengembalikan list kosong)
+final langs = await flutterTts.getLanguages;
+if (langs == null || langs.isEmpty) {
+  // tampilkan pesan / beri catatan bahwa TTS engine tidak tersedia pada device
+  _showSnackBar('Tidak ada bahasa TTS yang tersedia. Periksa pengaturan TTS di device.');
+} else {
+  if (langs.contains('id-ID')) await flutterTts.setLanguage('id-ID');
+  else await flutterTts.setLanguage(langs.first);
+}
+
+await flutterTts.setSpeechRate(0.5);
+await flutterTts.setPitch(1.0);
+await flutterTts.setVolume(1.0);
+
+flutterTts.setStartHandler(() => setState(() => _isSpeaking = true));
+flutterTts.setCompletionHandler(() => setState(() => _isSpeaking = false));
+flutterTts.setErrorHandler((msg) {
+  setState(() => _isSpeaking = false);
+  _showSnackBar('Error TTS: $msg');
+});
+setState(() => _isTtsInitialized = true);
+```
+
+- Memanggil speak/stop:
+
+```dart
+Future<void> _speakText() async {
+  if (widget.ocrText.isEmpty) { _showSnackBar('Tidak ada teks untuk dibacakan'); return; }
+  if (!_isTtsInitialized) { _showSnackBar('TTS belum siap, tunggu sebentar...'); return; }
+  await flutterTts.speak(widget.ocrText);
+}
+
+Future<void> _stopSpeaking() async {
+  await flutterTts.stop();
+  setState(() => _isSpeaking = false);
+}
+```
+
+📷 **Screenshot Hasil:**
+
+<p align="center">
+  <img src="images/uts3.jpg" width="250"/>
+</p>
